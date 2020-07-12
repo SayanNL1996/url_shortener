@@ -51,6 +51,7 @@ func Matches(str, pattern string) bool {
 }
 
 func Createurl(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json")
 	var url Url
 	_ = json.NewDecoder(r.Body).Decode(&url)
@@ -61,11 +62,12 @@ func Createurl(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	//
+	// Generates a hash value for the actual url
 	hashcode, err := shortid.Generate()
 	if err != nil {
 		log.Fatal("Error!!")
 	} else {
+		// Sets the hash value as key in Redis Server
 		Client.Set(Client.Context(), hashcode, url.LongURL, 10*time.Minute).Err()
 		var responsestruct = Responsestruct{
 			Message: "Short URL generated",
@@ -83,14 +85,14 @@ func Createurl(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// This function will redirect to actual website
-
+// This function will redirect the short url to the actual url
 func Redirecturl(w http.ResponseWriter, r *http.Request) {
 
 	shorturl := mux.Vars(r)["shorturl"]
 	if shorturl == " " {
-		fmt.Println("Errorrrr")
+		fmt.Println("Error")
 	} else {
+		// Gets the original url from the short url.
 		LongURL, err := Client.Get(Client.Context(), shorturl).Result()
 		if err == redis.Nil {
 			fmt.Println("no value found")
